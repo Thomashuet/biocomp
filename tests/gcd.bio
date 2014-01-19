@@ -1,0 +1,13 @@
+fun D = gcd(A, B) {
+  while B > 0 do {
+    A := A % B;
+    var C := A;
+    A := B;
+    B := C;
+  }
+  D := A;
+}
+
+var x := 42;
+var y := 9;
+var d := gcd(x, y);

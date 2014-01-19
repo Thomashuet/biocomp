@@ -1,0 +1,9 @@
+*.swp
+*.cm[io]
+src/biocomp
+src/.depend
+src/lexer.ml
+src/parser.automaton
+src/parser.conflicts
+src/parser.ml
+src/parser.mli
