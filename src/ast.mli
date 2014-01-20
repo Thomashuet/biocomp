@@ -35,11 +35,11 @@ type source =
 | SVar of string * expr * source
 | SNop
 
-type inlined =
-| IAssign of string * expr
-| IIte of bexpr * inlined * inlined
-| IWhile of bexpr * inlined
-| ISeq of inlined list
-| IPar of inlined list
+type 'a inlined =
+| IAssign of string * expr * 'a
+| IIte of bexpr * 'a inlined * 'a inlined * 'a
+| IWhile of bexpr * 'a inlined * 'a
+| ISeq of 'a inlined list
+| IPar of 'a inlined list
 
 type reaction = { reactants : (int * string) list; products : (int * string) list; is_fast : bool }
