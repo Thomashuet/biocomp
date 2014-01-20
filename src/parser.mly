@@ -5,7 +5,6 @@
 %token DO ELSE FUN IF THEN VAR WHILE
 %token AFFECT COMMA EOF SEMICOLON LP RP LB RB
 %token NOT AND OR
-%token <bool> BOOL
 %token <int> INT
 %token <string> IDENT
 %token ADD SUB MUL DIV MOD
@@ -56,7 +55,6 @@ comparator:
 bexpr:
 | b = parenthesis(bexpr) { b }
 | NOT b = bexpr { Not b }
-| b = BOOL { Bool b }
 | e1 = expr cmp = comparator e2 = expr { Cmp (e1, cmp, e2) }
 | b1 = bexpr OR b2 = bexpr { Or (b1, b2) }
 | b1 = bexpr AND b2 = bexpr { And (b1, b2) }

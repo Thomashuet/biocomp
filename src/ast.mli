@@ -20,7 +20,7 @@ type comparator =
 | Gte
 
 type bexpr =
-| Bool of bool
+| Agent of string
 | Cmp of expr * comparator * expr
 | Or of bexpr * bexpr
 | And of bexpr * bexpr

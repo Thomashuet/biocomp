@@ -18,6 +18,9 @@ let find_var name env = try
   Env.find name env
 with Not_found -> raise (Variable_undefined name)
 
+let stdlib = List.fold_left (fun env (name, body) -> Env.add name body env) Env.empty
+[]
+
 let rec inline_source funs vars = function
 | SNop -> ISeq []
 | SFun(f, ans, args, body, next) ->
@@ -59,6 +62,9 @@ and inline_expr funs vars = function
 | App(name, arg_exprs) ->
   let ans = new_var () in
   [inline_source funs (Env.add ans ans vars) (SAssign([ans], App(name, arg_exprs)))], Ident ans
+| Op(e1, Mul, e2) -> inline_expr funs vars (App("*", [e1; e2]))
+| Op(e1, Div, e2) -> inline_expr funs vars (App("/", [e1; e2]))
+| Op(e1, Mod, e2) -> inline_expr funs vars (App("%", [e1; e2]))
 | Op(e1, op, e2) ->
   let before1, e1_inline = inline_expr funs vars e1
   and before2, e2_inline = inline_expr funs vars e2
@@ -69,12 +75,17 @@ and inline_expr funs vars = function
 | Int n -> [], Int n
 
 and inline_bexpr funs vars = function
-| Bool b -> [], Bool b
 | Cmp(e1, cmp, e2) ->
-  let before1, e1_inline = inline_expr funs vars e1
-  and before2, e2_inline = inline_expr funs vars e2
+  let agent = new_var () in
+  let name = match cmp with
+  | Eq -> "="
+  | Neq -> "<>"
+  | Lt -> "<"
+  | Lte -> "<="
+  | Gt -> ">"
+  | Gte -> ">="
   in
-  before1 @ before2, Cmp(e1_inline, cmp, e2_inline)
+  [inline_source funs (Env.add agent agent vars) (SAssign([agent], App(name, [e1; e2])))], Agent agent
 | And(b1, b2) ->
   let before1, b1_inline = inline_bexpr funs vars b1
   and before2, b2_inline = inline_bexpr funs vars b2
@@ -88,6 +99,7 @@ and inline_bexpr funs vars = function
 | Not(b) ->
   let before, b_inline = inline_bexpr funs vars b in
   before, Not(b_inline)
+| Agent a -> [], Agent (find_var a vars)
 
 let rec flatten i =
   let rec aux = function

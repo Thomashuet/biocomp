@@ -31,7 +31,7 @@ Lexing and parsing of input
   try
     let source = Parser.source Lexer.token buf in
     close_in f;
-    let inlined = Opt.flatten (Opt.inline_source Opt.Env.empty Opt.Env.empty source) in
+    let inlined = Opt.flatten (Opt.inline_source Opt.stdlib Opt.Env.empty source) in
     ()
 (*
 Process errors
