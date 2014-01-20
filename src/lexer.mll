@@ -4,8 +4,7 @@
 
   exception Bad_character of char
 
-  let kwd_tbl = ["do", DO; "else", ELSE; "fun", FUN; "if", IF;
-                 "then", THEN; "var", VAR; "while", WHILE]
+  let kwd_tbl = ["else", ELSE; "function", FUN; "if", IF; "var", VAR; "while", WHILE]
   let id_or_kwd s = try List.assoc s kwd_tbl with _ -> IDENT s
 }
 
@@ -19,18 +18,18 @@ rule token = parse
 | ')' { RP }
 | '{' { LB }
 | '}' { RB }
-| ":=" { AFFECT }
+| "=" { AFFECT }
 | '+' { ADD }
 | '-' { SUB }
 | '*' { MUL }
 | '/' { DIV }
 | '%' { MOD }
-| '=' { EQ }
+| "==" { EQ }
 | '<' { LT }
 | '>' { GT }
 | ">=" { GTE }
 | "<=" { LTE }
-| "<>" { NEQ }
+| "!=" { NEQ }
 | '!' { NOT }
 | "||" { OR }
 | "&&" { AND }
