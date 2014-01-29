@@ -4,7 +4,7 @@
 
   exception Bad_character of char
 
-  let kwd_tbl = ["else", ELSE; "function", FUN; "if", IF; "var", VAR; "while", WHILE]
+  let kwd_tbl = ["else", ELSE; "function", FUN; "if", IF; "return", RETURN; "var", VAR; "while", WHILE]
   let id_or_kwd s = try List.assoc s kwd_tbl with _ -> IDENT s
 }
 

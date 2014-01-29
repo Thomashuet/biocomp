@@ -27,19 +27,19 @@ type bexpr =
 | Not of bexpr
 
 type source =
-| SFun of string * string list * string list * source * source
+| SFun of string * string list * source * source
 | SAssign of string list * expr
 | SIte of bexpr * source * source
 | SWhile of bexpr * source
 | SSeq of source * source
 | SVar of string * expr * source
+| SReturn of expr list
 | SNop
 
 type 'a inlined =
 | IAssign of string * expr * 'a
+| IComp of string * string * expr * expr * 'a
 | IIte of bexpr * 'a inlined * 'a inlined * 'a
 | IWhile of bexpr * 'a inlined * 'a
 | ISeq of 'a inlined list
 | IPar of 'a inlined list
-
-type reaction = { reactants : (int * string) list; products : (int * string) list; is_fast : bool }

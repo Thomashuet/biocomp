@@ -2,7 +2,7 @@
   open Ast
 %}
 
-%token ELSE FUN IF VAR WHILE
+%token ELSE FUN IF RETURN VAR WHILE
 %token AFFECT COMMA EOF SEMICOLON LP RP LB RB
 %token NOT AND OR
 %token <int> INT
@@ -10,14 +10,15 @@
 %token ADD SUB MUL DIV MOD
 %token EQ NEQ LT LTE GT GTE
 
-%right IF ELSE
-%left SEMICOLON WHILE VAR LB LP IDENT
+%right WHILE VAR RETURN LP LB IF IDENT FUN SEMICOLON
+
 %left OR
 %left AND
 %left NOT
 %left ADD SUB
 %left MUL DIV MOD
-%nonassoc FUN
+
+%right ELSE
 
 %start <Ast.source> source
 
@@ -31,17 +32,18 @@ source: s = stmt EOF { s }
 
 stmt:
 | s = parenthesis(stmt) { s }
-| FUN ans = separated_nonempty_list(COMMA, IDENT) AFFECT name = IDENT args = parenthesis(separated_list(COMMA, IDENT))
+| FUN name = IDENT args = parenthesis(separated_list(COMMA, IDENT))
   body = parenthesis(stmt)
   s = stmt
-  { SFun(name, ans, args, body, s) } %prec FUN
+  { SFun(name, args, body, s) } %prec ELSE
+| RETURN ans = separated_list(COMMA, expr) SEMICOLON { SReturn ans }
 | names = separated_nonempty_list(COMMA, IDENT) AFFECT value = expr SEMICOLON { SAssign (names, value) }
-| IF cond = parenthesis(bexpr) s1 = stmt ELSE s2 = stmt { SIte (cond, s1, s2) }
-| IF cond = parenthesis(bexpr) s1 = stmt { SIte (cond, s1, SNop) }
+| IF cond = parenthesis(bexpr) s1 = stmt ELSE s2 = stmt { SIte (cond, s1, s2) } %prec ELSE
+| IF cond = parenthesis(bexpr) s1 = stmt { SIte (cond, s1, SNop) } %prec ELSE
 | VAR name = IDENT AFFECT value = expr SEMICOLON next = stmt { SVar(name, value, next) }
 | VAR name = IDENT AFFECT value = expr SEMICOLON { SVar(name, value, SNop) }
-| WHILE cond = parenthesis(bexpr) s = stmt { SWhile (cond, s) }
-| s1 = stmt s2 = stmt { SSeq (s1, s2) } %prec SEMICOLON
+| WHILE cond = parenthesis(bexpr) s = stmt { SWhile (cond, s) } %prec ELSE
+| s1 = stmt s2 = stmt { SSeq (s1, s2) } %prec ELSE
 
 comparator:
 | EQ { Eq }

@@ -1,13 +1,13 @@
-fun Q, R = divide(A, B) {
-  while A >= B do {
-    A := A - B;
-    Q := Q + 1;
+function divide(A, B) {
+  while (A >= B) {
+    A = A - B;
+    Q = Q + 1;
   }
-  R := A;
+  return Q, A;
 }
 
-var x := 42;
-var y := 9;
-var q := 0;
-var r := 0;
-q, r := divide(x, y);
+var x = 42;
+var y = 9;
+var q = 0;
+var r = 0;
+q, r = divide(x, y);
