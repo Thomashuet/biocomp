@@ -32,6 +32,8 @@ Lexing and parsing of input
     let source = Parser.source Lexer.token buf in
     close_in f;
     let inlined = Opt.flatten (Opt.inline_source Opt.stdlib Opt.Env.empty source) in
+    let with_alive = Opt.alive (Opt.base_vars Opt.S.empty source) inlined in
+    let reactions_with_conditions = Gen.make_reactions Gen.RC.empty (fst with_alive) in
     ()
 (*
 Process errors

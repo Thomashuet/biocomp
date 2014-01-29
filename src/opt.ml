@@ -130,6 +130,16 @@ let rec flatten i =
 
 module S = Set.Make(String)
 
+let rec base_vars vars = function
+| SFun (_, _, _, s) -> base_vars vars s
+| SVar (name, _, s) -> base_vars (S.add name vars) s
+| SSeq (a, b) -> base_vars (base_vars vars a) b
+| SAssign _
+| SIte _
+| SWhile _
+| SReturn _
+| SNop -> vars
+
 let rec fixpoint (=) f x =
   let y = f x in
   if y = x then y else fixpoint (=) f y

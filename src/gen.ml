@@ -31,7 +31,13 @@ let rec canon_bexpr = function
 | Cmp _
 | Not (Cmp _) -> assert false
 
-let rec gen = function
+(* set of reactions with conditions *)
+module RC = Set.Make(struct
+  type t = bexpr list list * reaction * bexpr list list
+  let compare = compare
+end)
+
+let rec make_reactions set = function
 | IAssign(name, expr, alive) ->
   let n, pos, neg = canon_expr expr in
   ()
