@@ -1,6 +1,6 @@
 OCAMLC=ocamlc
 MENHIR=menhir -v
-CMO=parser.cmo lexer.cmo opt.cmo main.cmo
+CMO=parser.cmo lexer.cmo opt.cmo gen.cmo main.cmo
 GENERATED=lexer.ml parser.ml parser.mli
 BIN=biocomp
 
