@@ -43,3 +43,5 @@ type 'a inlined =
 | IWhile of bexpr * 'a inlined * 'a
 | ISeq of 'a inlined list
 | IPar of 'a inlined list
+
+type reaction = {reactants : string list; products : string list}
