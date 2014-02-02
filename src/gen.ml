@@ -1,5 +1,7 @@
 open Ast
 
+let swap f x y = f y x
+
 let rec canon_expr = function
 | Ident id -> (0, [id], [])
 | Int n -> (n, [], [])
@@ -94,5 +96,59 @@ let rec split_reaction set (pre, x, post) =
   else RC.add (pre, x, post) set
 
 let split_all_reactions set =
-  let swap f x y = f y x in
   RC.fold (swap split_reaction) set RC.empty
+
+(*
+ * To simplify the problem we will consider that we need to introduce
+ * a buffer reaction whenever a component appears in a positive form
+ * in either pre- or post-condition and in a negative form in the
+ * other condition, or vice versa.
+*)
+module BC = Set.Make(String)
+
+let positive_agents l =
+let rec aux set = function
+| []      -> set
+| x :: xs -> match x with
+  | Agent(s)      -> aux (BC.add s set) xs
+  | Not(Agent(s)) -> aux set xs
+in List.fold_left BC.union BC.empty (List.map (aux BC.empty) l)
+
+let negative_agents l =
+let rec aux set = function
+| []      -> set
+| x :: xs -> match x with
+  | Not(Agent(s)) -> aux (BC.add s set) xs
+  | Agent(s)      -> aux set xs
+in List.fold_left BC.union BC.empty (List.map (aux BC.empty) l)
+
+let sat (pre, post) =
+let pos_pre  = positive_agents pre in
+let neg_pre  = negative_agents pre in
+let pos_post = positive_agents post in
+let neg_post = negative_agents post in
+BC.is_empty (BC.union (BC.inter pos_pre neg_post) (BC.inter neg_pre pos_post))
+
+let contradiction (pre, x, post) = not (sat (pre, post))
+
+let rec negate_reactants = function
+| [x]     -> Not(Agent(x))
+| x :: xs -> And(Not(Agent(x)), negate_reactants xs)
+
+(*
+ * Given a set of reactions and a reaction, add the reaction to the set,
+ * possibly modifying it to introduce a buffer reactant.
+ *)
+let make_buffer set (pre, x, post) =
+if contradiction (pre, x, post) then
+  let set  = RC.remove (pre, x, post) set in
+  let p    = new_prod () in
+  let r1   = (pre, { reactants = x.reactants ; products = [p] }, []) in
+  let pre2 = canon_bexpr (negate_reactants x.reactants) in
+  let r2   = (pre2, { reactants = [p] ; products = x.products }, post) in
+  RC.add r2 (RC.add r1 set)
+else
+  RC.add (pre, x, post) set
+
+let make_all_buffers set =
+RC.fold (swap make_buffer) set RC.empty
