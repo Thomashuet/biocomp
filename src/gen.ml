@@ -92,3 +92,7 @@ let rec split_reaction set (pre, x, post) =
     let set = RC.add rr3 set in
     split_reaction (split_reaction set rr2) rr1
   else RC.add (pre, x, post) set
+
+let split_all_reactions set =
+  let swap f x y = f y x in
+  RC.fold (swap split_reaction) set RC.empty
