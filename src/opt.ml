@@ -21,6 +21,80 @@ with Not_found -> raise (Variable_undefined name)
 let stdlib = List.fold_left (fun env (name, body) -> Env.add name body env) Env.empty
 []
 
+(*
+ * Rearrange the code tree so returning branches can be dealt with.
+ *)
+let rec leftify = function
+| SSeq(SSeq(s1,s2),s3)         -> leftify (SSeq(s1, SSeq(s2,s3)))
+| SFun(name, args, body, next) ->
+    SFun(name, args, leftify body, leftify next)
+| SWhile(b, s)    -> SWhile(b, leftify s)
+| SIte(b, s1, s2) -> SIte(b, leftify s1, leftify s2)
+| SVar(b, e, s)   -> SVar(b, e, leftify s)
+| SSeq(s1, s2)    -> SSeq(leftify s1, leftify s2)
+| x -> x
+
+(*
+ * Rearrange the code so that instructions that follow an if-then-else
+ * statement go in the branches of the statement instead. This actually
+ * only needs being done when the ITE statement returns, so while
+ * technically correct, one can view this implementation as inefficient.
+ *)
+let rec ite_friendly = function
+| SSeq(SNop, s)             -> ite_friendly s
+| SSeq(s, SNop)             -> ite_friendly s
+| SSeq(SIte(b, s1, s2), s3) ->
+  let ss1 = ite_friendly s1 in
+  let ss2 = ite_friendly s2 in
+  let ss3 = ite_friendly s3 in
+  let lb = ite_friendly (SSeq(ss1,ss3)) in
+  let rb = ite_friendly (SSeq(ss2,ss3)) in
+  SIte(b, lb, rb)
+| SSeq(s1,s2)                  -> SSeq(ite_friendly s1, ite_friendly s2)
+| SWhile(b,s)                  -> SWhile(b, ite_friendly s)
+| SVar(v,e,s)                  -> SVar(v,e, ite_friendly s)
+| SIte(b,s1,s2)                -> SIte(b, ite_friendly s1, ite_friendly s2)
+| SFun(name, args, body, next) ->
+  SFun(name, args, ite_friendly body, ite_friendly next)
+| x -> x
+
+(*
+ * Check if a branch of the code tree can return.
+ *)
+let rec returns = function
+| SFun(_, _, body, next) -> (returns body) || (returns next)
+| SAssign(_, _)          -> false
+| SIte(_, s1, s2)        -> (returns s1) || (returns s2)
+| SWhile(_, s)           -> returns s
+| SSeq(s1, s2)           -> (returns s1) || (returns s2)
+| SVar(_, e, s)          -> returns s
+| SReturn(_)             -> true
+| SNop                   -> false
+
+(*
+ * Remove from code the branches that should logically follow a return
+ * statement, thus being never executed. The code should be prepared using
+ * ite_friendly beforehand.
+ *)
+let rec remove_dead_branches = function
+| SSeq(s1, s2) when aux s1 -> remove_dead_branches s1
+| SSeq(s1, s2)             ->
+    SSeq(remove_dead_branches s1, remove_dead_branches s2)
+| SWhile(b,s)   -> SWhile(b, remove_dead_branches s)
+| SVar(v,e,s)   -> SVar(v,e, remove_dead_branches s)
+| SIte(b,s1,s2) ->
+    SIte(b, remove_dead_branches s1, remove_dead_branches s2)
+| SFun(name, args, body, next) ->
+    SFun(name, args, remove_dead_branches body, remove_dead_branches next)
+| x -> x
+
+(*
+ * Make the code tree ready for compilation.
+ * This includes removing code that would possibly being executed after
+ * a function has returned.
+ *)
+let precompile s = remove_dead_branches (ite_friendly (leftify s))
+
 let rec inline_source funs vars = function
 | SNop -> ISeq []
 | SFun(f, args, body, next) ->

@@ -29,7 +29,7 @@ Lexing and parsing of input
 *)
   let buf = Lexing.from_channel f in
   try
-    let source = Parser.source Lexer.token buf in
+    let source = Opt.precompile (Parser.source Lexer.token buf) in
     close_in f;
     let inlined = Opt.flatten (Opt.inline_source Opt.stdlib Opt.Env.empty source) in
     let with_alive = Opt.alive (Opt.base_vars Opt.S.empty source) inlined in
