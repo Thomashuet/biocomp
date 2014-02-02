@@ -77,7 +77,7 @@ let rec returns = function
  * ite_friendly beforehand.
  *)
 let rec remove_dead_branches = function
-| SSeq(s1, s2) when aux s1 -> remove_dead_branches s1
+| SSeq(s1, s2) when returns s1 -> remove_dead_branches s1
 | SSeq(s1, s2)             ->
     SSeq(remove_dead_branches s1, remove_dead_branches s2)
 | SWhile(b,s)   -> SWhile(b, remove_dead_branches s)
