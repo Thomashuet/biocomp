@@ -26,12 +26,12 @@ let stdlib = List.fold_left (fun env (name, body) -> Env.add name body env) Env.
  *)
 let rec leftify = function
 | SSeq(SSeq(s1,s2),s3)         -> leftify (SSeq(s1, SSeq(s2,s3)))
+| SSeq(s1, s2)                 -> SSeq(leftify s1, leftify s2)
 | SFun(name, args, body, next) ->
     SFun(name, args, leftify body, leftify next)
 | SWhile(b, s)    -> SWhile(b, leftify s)
 | SIte(b, s1, s2) -> SIte(b, leftify s1, leftify s2)
 | SVar(b, e, s)   -> SVar(b, e, leftify s)
-| SSeq(s1, s2)    -> SSeq(leftify s1, leftify s2)
 | x -> x
 
 (*
@@ -47,10 +47,11 @@ let rec ite_friendly = function
   let ss1 = ite_friendly s1 in
   let ss2 = ite_friendly s2 in
   let ss3 = ite_friendly s3 in
-  let lb = ite_friendly (SSeq(ss1,ss3)) in
-  let rb = ite_friendly (SSeq(ss2,ss3)) in
+  let lb = ite_friendly (leftify (SSeq (ss1,ss3))) in
+  let rb = ite_friendly (leftify (SSeq (ss2,ss3))) in
   SIte(b, lb, rb)
-| SSeq(s1,s2)                  -> SSeq(ite_friendly s1, ite_friendly s2)
+| SSeq(s1,s2)
+  -> (leftify (SSeq(ite_friendly s1, ite_friendly s2)))
 | SWhile(b,s)                  -> SWhile(b, ite_friendly s)
 | SVar(v,e,s)                  -> SVar(v,e, ite_friendly s)
 | SIte(b,s1,s2)                -> SIte(b, ite_friendly s1, ite_friendly s2)
