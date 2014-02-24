@@ -166,7 +166,7 @@ and inline_bexpr funs vars = function
   let before1, e1_inline = inline_expr funs vars e1
   and before2, e2_inline = inline_expr funs vars e2
   in
-  before1 @ before2 @ [IComp(a, b, e1_inline, e2_inline, ())],
+  before1 @ before2 @ [IAssign(a, e1_inline, ()); IAssign(b, e2_inline, ()); IComp(a, b, ())],
   begin match cmp with
   | Eq -> And(Not(Agent a), Not(Agent b))
   | Neq -> Or(Agent a, Agent b)
@@ -197,7 +197,7 @@ let rec flatten i =
   | IWhile(b, i, tag) -> [IWhile(b, flatten i, tag)]
   | IPar l -> [IPar(List.map flatten l)]
   | IAssign(v, e, tag) -> [IAssign(v, e, tag)]
-  | IComp(a, b, ea, eb, tag) -> [IComp(a, b, ea, eb, tag)]
+  | IComp(a, b, tag) -> [IComp(a, b, tag)]
   in
   match aux i with
   | [x] -> x
@@ -234,7 +234,7 @@ let rec free_bexpr vars = function
 let rec alive vars = function
 | IAssign(name, value, _) when not (S.mem name vars) -> ISeq [], vars
 | IAssign(name, value, _) -> IAssign(name, value, vars), free_expr (S.remove name vars) value
-| IComp(a, b, ea, eb, _) -> IComp(a, b, ea, eb, vars), free_expr (free_expr vars ea) eb
+| IComp(a, b, _) -> IComp(a, b, vars), vars
 | IIte(b, i1, i2, _) ->
   let tagged_i1, vars_i1 = alive vars i1
   and tagged_i2, vars_i2 = alive vars i2

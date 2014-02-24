@@ -38,7 +38,7 @@ type source =
 
 type 'a inlined =
 | IAssign of string * expr * 'a
-| IComp of string * string * expr * expr * 'a
+| IComp of string * string * 'a
 | IIte of bexpr * 'a inlined * 'a inlined * 'a
 | IWhile of bexpr * 'a inlined * 'a
 | ISeq of 'a inlined list
