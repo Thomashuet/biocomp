@@ -64,7 +64,7 @@ let rec make_reactions set pre = function
   let agents = canon_expr expr in
   let self = try List.assoc name agents with Not_found -> 0 in
   let add (s, p) (agent, mul) =
-    let s, pre, agent = 
+    let s, pre, agent =
       if Opt.S.mem agent alive then
         copy s p agent
       else s, pre, agent
@@ -82,7 +82,7 @@ let rec make_reactions set pre = function
   else
     (* TODO: nullify agent *)
     List.fold_left add (set, pre) agents
-| IComp(a, b, _) -> 
+| IComp(a, b, _) ->
   (* a and b were created locally and won't be used again without being reassigned *)
   RC.add (pre, {reactants = [a; b]; products = []}, [[Not(Agent a)]; [Not(Agent b)]]) set,
   [[Not(Agent a)]; [Not(Agent b)]]
@@ -145,7 +145,13 @@ let pos_post = positive_agents post in
 let neg_post = negative_agents post in
 BC.is_empty (BC.union (BC.inter pos_pre neg_post) (BC.inter neg_pre pos_post))
 
-let contradiction (pre, x, post) = not (sat (pre, post))
+let biggerPost (pre, x, post) =
+  let listProds = List.map (fun s -> Agent s) x.products in
+  listProds :: post
+
+let contradiction (pre, x, post) =
+  let post = biggerPost (pre, x, post) in
+  not (sat (pre, post))
 
 let rec negate_reactants = function
 | [x]     -> Not(Agent(x))
