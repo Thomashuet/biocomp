@@ -148,6 +148,10 @@ and inline_expr funs vars = function
 | App(name, arg_exprs) ->
   let ans = new_var () in
   [inline_source funs (Env.add ans ans vars) (SAssign([ans], App(name, arg_exprs)))], Ident ans
+| Op(Int n, Mul, e)
+| Op(e, Mul, Int n) ->
+  let rec mul n = if n = 1 then e else Op(e, Add, mul (n-1)) in
+  inline_expr funs vars (mul n)
 | Op(e1, Mul, e2) -> inline_expr funs vars (App("*", [e1; e2]))
 | Op(e1, Div, e2) -> inline_expr funs vars (App("/", [e1; e2]))
 | Op(e1, Mod, e2) -> inline_expr funs vars (App("%", [e1; e2]))

@@ -116,6 +116,8 @@ let new_prod = Opt.new_var
  * in either pre- or post-condition and in a negative form in the
  * other condition, or vice versa.
 *)
+(* TODO: unfortunately, the problem is not as simple as stated previously,
+an agent may appear in the products but not in the post-condition *)
 module BC = Set.Make(String)
 
 let positive_agents l =
