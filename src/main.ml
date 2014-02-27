@@ -36,9 +36,8 @@ Lexing and parsing of input
     let inlined = Opt.flatten (Opt.inline_source Opt.stdlib Opt.Env.empty source) in
     let with_alive, _ = Opt.alive (Opt.base_vars (Opt.S.add "__unit" Opt.S.empty) source) inlined in
     let reactions_with_conditions, _ = Gen.make_reactions Gen.RC.empty [[]] with_alive in
-    (*let buffered_reactions = Gen.make_all_buffers reactions_with_conditions in
-    let reactions = Gen.remove_all_conditions buffered_reactions in*)
-    let reactions = Gen.remove_all_conditions reactions_with_conditions in
+    let buffered_reactions = Gen.make_all_buffers reactions_with_conditions in
+    let reactions = Gen.remove_all_conditions buffered_reactions in
     if !split then
       let splitted_reactions = Gen.split_all_reactions reactions in
       Gen.print_all_reactions splitted_reactions
