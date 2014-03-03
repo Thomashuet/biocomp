@@ -91,8 +91,10 @@ let rec make_reactions set pre = function
   let set, postb = make_reactions set (and_dnf pre (canon_bexpr (Not cond)))  b in
   set, and_dnf (canon_bexpr cond) posta @ and_dnf (canon_bexpr (Not cond)) postb
 | IWhile(cond, body, _) ->
-  (* TODO: implement while *)
-  set, pre
+  let start = Opt.new_var () in
+  let set = RC.add (and_dnf pre [[Not (Agent start)]], {reactants = []; products = [start]}, []) set in
+  let set, post = make_reactions set (and_dnf [[Agent start]] (canon_bexpr cond)) body in
+  set, and_dnf [[Agent start]] (canon_bexpr (Not cond))
 
 (*
  * Given an index and a list, returns a pair of lists, splitted at the given
@@ -116,7 +118,7 @@ let new_prod = Opt.new_var
  * in either pre- or post-condition and in a negative form in the
  * other condition, or vice versa.
 *)
-(* TODO: unfortunately, the problem is not as simple as stated previously,
+(* unfortunately, the problem is not as simple as stated previously,
 an agent may appear in the products but not in the post-condition *)
 module BC = Set.Make(String)
 
@@ -181,10 +183,15 @@ module R = Set.Make(struct
   let compare = compare
 end)
 
+let negated = ref BC.empty
+
 let remove_conditions set (pre, x, _) =
   let rec agent_of_bexpr = function
   | Agent a -> a
-  | Not(Agent a) -> "__not" ^ a
+  | Not(Agent a) -> begin
+    negated := BC.add a !negated;
+    "__not" ^ a
+  end
   | _ -> assert false
   in
   let condition set conj =
@@ -244,10 +251,16 @@ let print_reaction r = begin
   | h :: t -> print_string (h^" + "); print t
   in
   print r.reactants;
-  print_string "-> ";
+  print_string "=> ";
   print r.products;
   print_newline ()
 end
 
 let print_all_reactions =
   R.iter print_reaction
+
+let print_absence_indicator () =
+  let print a =
+    print_endline ("slow for => __not"^a^"\n"^a^" + __not"^a^" => "^a^"\n__not"^a^" + __not"^a^" => __not"^a)
+  in
+  BC.iter print !negated

@@ -8,9 +8,11 @@ Parse command line and open files
 let ifile = ref ""
 let ofile = ref "out.bc"
 let split = ref false
+let print_abs = ref false
 
 let options =
   ["-o", Arg.String ((:=) ofile), " <file> Set output file name";
+   "-a", Arg.Set print_abs, "print reactions for absence indicator";
    "-s", Arg.Set split, "split reactions with more than 2 reactants"]
 
 let usage = "usage: biocomp [options] [file]"
@@ -38,11 +40,9 @@ Lexing and parsing of input
     let reactions_with_conditions, _ = Gen.make_reactions Gen.RC.empty [[]] with_alive in
     let buffered_reactions = Gen.make_all_buffers reactions_with_conditions in
     let reactions = Gen.remove_all_conditions buffered_reactions in
-    if !split then
-      let splitted_reactions = Gen.split_all_reactions reactions in
-      Gen.print_all_reactions splitted_reactions
-    else
-      Gen.print_all_reactions reactions
+    let reactions = if !split then Gen.split_all_reactions reactions else reactions in
+    let () = if !print_abs then Gen.print_absence_indicator () in
+    Gen.print_all_reactions reactions
 (*
 Process errors
 *)
