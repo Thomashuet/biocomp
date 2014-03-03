@@ -1,3 +1,1 @@
-- Ensure that a function can't return twice
-  transform sources from `if(a>b) return 0; return 1;` to `if(a>b) return 0; else return 1;`
 - write stdlib (multiplication, division, modulo)
